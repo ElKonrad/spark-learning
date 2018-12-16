@@ -8,7 +8,7 @@ object Aggregation {
     .map(airline => (airline, Random.nextInt(10)))
 
   def main(args: Array[String]): Unit = {
-    val sparkConf: SparkConf = new SparkConf().setMaster("local").setAppName("spark-frist")
+    val sparkConf: SparkConf = new SparkConf().setMaster("local").setAppName("spark-aggregation")
     val sc = new SparkContext(sparkConf)
 
     val input = sc.textFile("/home/konrad/IdeaProjects/spark-learning/src/main/resources/randomtext.txt")
