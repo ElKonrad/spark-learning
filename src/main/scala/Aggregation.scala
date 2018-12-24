@@ -1,3 +1,4 @@
+import conf.MySparkConf
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.util.Random
@@ -8,10 +9,10 @@ object Aggregation {
     .map(airline => (airline, Random.nextInt(10)))
 
   def main(args: Array[String]): Unit = {
-    val sparkConf: SparkConf = new SparkConf().setMaster("local").setAppName("spark-aggregation")
+    val sparkConf: SparkConf = MySparkConf.get("spark-aggregation")
     val sc = new SparkContext(sparkConf)
 
-    val input = sc.textFile("/home/konrad/IdeaProjects/spark-learning/src/main/resources/randomtext.txt")
+    val input = sc.textFile(ResourceHelper.getResourceFilepath("randomtext.txt"))
 
     val wordsCount = input.flatMap(line => line.split(" "))
       .map(_.replaceAll("[-+.^:,]", ""))

@@ -1,9 +1,10 @@
+import conf.MySparkConf
 import org.apache.spark.{SparkConf, SparkContext}
 
 object Grouping {
 
   def main(args: Array[String]): Unit = {
-    val sparkConf: SparkConf = new SparkConf().setMaster("local").setAppName("spark-grouping")
+    val sparkConf: SparkConf = MySparkConf.get("spark-grouping")
     val sc = new SparkContext(sparkConf)
 
     val storeAddress = sc.parallelize(List(

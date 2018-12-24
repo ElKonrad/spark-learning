@@ -1,9 +1,10 @@
+import conf.MySparkConf
 import org.apache.spark.{SparkConf, SparkContext}
 
 object BroadcastTest {
   def main(args: Array[String]) {
 
-    val sparkConf = new SparkConf().setMaster("local").setAppName("spark-broadcast")
+    val sparkConf = MySparkConf.get("spark-broadcast")
     val sc = new SparkContext(sparkConf)
 
     val slices = 2
