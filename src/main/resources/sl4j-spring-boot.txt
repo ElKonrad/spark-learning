@@ -1,0 +1,97 @@
+2018-11-20 19:32:07.066  INFO 13798 --- [main] pl.demo.elk.ElkApplication               : Starting ElkApplication on konrad-K53SD with PID 13798 (/home/konrad/IdeaProjects/elk/target/classes started by konrad in /home/konrad/IdeaProjects/elk)
+2018-11-20 19:32:07.108  INFO 13798 --- [main] pl.demo.elk.ElkApplication               : No active profile set, falling back to default profiles: default
+2018-11-20 19:32:07.448  INFO 13798 --- [main] ationConfigEmbeddedWebApplicationContext : Refreshing org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext@7bb58ca3: startup date [Tue Nov 20 19:32:07 CET 2018]; root of context hierarchy
+2018-11-20 19:32:10.013  INFO 13798 --- [main] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat initialized with port(s): 8080 (http)
+2018-11-20 19:32:10.058  INFO 13798 --- [main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2018-11-20 19:32:10.058  INFO 13798 --- [main] org.apache.catalina.core.StandardEngine  : Starting Servlet Engine: Apache Tomcat/8.5.34
+2018-11-20 19:32:10.317  INFO 13798 --- [localhost-startStop-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring embedded WebApplicationContext
+2018-11-20 19:32:10.319  INFO 13798 --- [localhost-startStop-1] o.s.web.context.ContextLoader            : Root WebApplicationContext: initialization completed in 2897 ms
+2018-11-20 19:32:10.516  INFO 13798 --- [localhost-startStop-1] o.s.b.w.servlet.ServletRegistrationBean  : Mapping servlet: 'dispatcherServlet' to [/]
+2018-11-20 19:32:10.521  INFO 13798 --- [localhost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: 'characterEncodingFilter' to: [/*]
+2018-11-20 19:32:10.534  INFO 13798 --- [localhost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: 'hiddenHttpMethodFilter' to: [/*]
+2018-11-20 19:32:10.534  INFO 13798 --- [localhost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: 'httpPutFormContentFilter' to: [/*]
+2018-11-20 19:32:10.535  INFO 13798 --- [localhost-startStop-1] o.s.b.w.servlet.FilterRegistrationBean   : Mapping filter: 'requestContextFilter' to: [/*]
+2018-11-20 19:32:11.008  INFO 13798 --- [main] s.w.s.m.m.a.RequestMappingHandlerAdapter : Looking for @ControllerAdvice: org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext@7bb58ca3: startup date [Tue Nov 20 19:32:07 CET 2018]; root of context hierarchy
+2018-11-20 19:32:11.094  INFO 13798 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped "{[/],methods=[GET]}" onto public void pl.demo.elk.controller.LogController.logSomething()
+2018-11-20 19:32:11.100  INFO 13798 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped "{[/error],produces=[text/html]}" onto public org.springframework.web.servlet.ModelAndView org.springframework.boot.autoconfigure.web.BasicErrorController.errorHtml(javax.servlet.http.HttpServletRequest,javax.servlet.http.HttpServletResponse)
+2018-11-20 19:32:11.102  INFO 13798 --- [main] s.w.s.m.m.a.RequestMappingHandlerMapping : Mapped "{[/error]}" onto public org.springframework.http.ResponseEntity<java.util.Map<java.lang.String, java.lang.Object>> org.springframework.boot.autoconfigure.web.BasicErrorController.error(javax.servlet.http.HttpServletRequest)
+2018-11-20 19:32:11.139  INFO 13798 --- [main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped URL path [/webjars/**] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]
+2018-11-20 19:32:11.139  INFO 13798 --- [main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped URL path [/**] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]
+2018-11-20 19:32:11.181  INFO 13798 --- [main] o.s.w.s.handler.SimpleUrlHandlerMapping  : Mapped URL path [/**/favicon.ico] onto handler of type [class org.springframework.web.servlet.resource.ResourceHttpRequestHandler]
+2018-11-20 19:32:11.408  INFO 13798 --- [main] o.s.j.e.a.AnnotationMBeanExporter        : Registering beans for JMX exposure on startup
+2018-11-20 19:32:11.491  INFO 13798 --- [main] s.b.c.e.t.TomcatEmbeddedServletContainer : Tomcat started on port(s): 8080 (http)
+2018-11-20 19:32:11.498  INFO 13798 --- [main] pl.demo.elk.ElkApplication               : Started ElkApplication in 5.745 seconds (JVM running for 8.968)
+2018-11-20 19:37:00.098  INFO 13798 --- [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/]       : Initializing Spring FrameworkServlet 'dispatcherServlet'
+2018-11-20 19:37:00.099  INFO 13798 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : FrameworkServlet 'dispatcherServlet': initialization started
+2018-11-20 19:37:00.113  INFO 13798 --- [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : FrameworkServlet 'dispatcherServlet': initialization completed in 14 ms
+2018-11-20 19:37:00.157  INFO 13798 --- [http-nio-8080-exec-1] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:37:16.168 ERROR 13798 --- [http-nio-8080-exec-3] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:37:16.903  WARN 13798 --- [http-nio-8080-exec-4] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:37:17.354  INFO 13798 --- [http-nio-8080-exec-5] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:37:17.899 ERROR 13798 --- [http-nio-8080-exec-6] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:37:18.332  INFO 13798 --- [http-nio-8080-exec-7] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:52.638 ERROR 13798 --- [http-nio-8080-exec-9] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:38:52.904  INFO 13798 --- [http-nio-8080-exec-10] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:53.361  INFO 13798 --- [http-nio-8080-exec-1] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:53.535 ERROR 13798 --- [http-nio-8080-exec-2] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:38:53.904  WARN 13798 --- [http-nio-8080-exec-3] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:54.077  INFO 13798 --- [http-nio-8080-exec-4] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:54.215  INFO 13798 --- [http-nio-8080-exec-5] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:55.550  WARN 13798 --- [http-nio-8080-exec-6] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:55.767  INFO 13798 --- [http-nio-8080-exec-7] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:56.268 ERROR 13798 --- [http-nio-8080-exec-8] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:38:56.333  WARN 13798 --- [http-nio-8080-exec-9] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:56.382  WARN 13798 --- [http-nio-8080-exec-10] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:56.393  INFO 13798 --- [http-nio-8080-exec-1] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:56.460  INFO 13798 --- [http-nio-8080-exec-2] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:56.491  WARN 13798 --- [http-nio-8080-exec-3] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:56.514  INFO 13798 --- [http-nio-8080-exec-4] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:56.575 ERROR 13798 --- [http-nio-8080-exec-5] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:38:56.631  WARN 13798 --- [http-nio-8080-exec-6] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:56.698  INFO 13798 --- [http-nio-8080-exec-7] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:56.731  INFO 13798 --- [http-nio-8080-exec-8] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:56.760  INFO 13798 --- [http-nio-8080-exec-9] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:56.809 ERROR 13798 --- [http-nio-8080-exec-10] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:38:56.841  INFO 13798 --- [http-nio-8080-exec-1] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:56.909 ERROR 13798 --- [http-nio-8080-exec-2] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:38:56.963 ERROR 13798 --- [http-nio-8080-exec-3] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:38:56.998  INFO 13798 --- [http-nio-8080-exec-4] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:57.033 ERROR 13798 --- [http-nio-8080-exec-5] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:38:57.065  WARN 13798 --- [http-nio-8080-exec-6] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:57.101  INFO 13798 --- [http-nio-8080-exec-7] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:57.166  WARN 13798 --- [http-nio-8080-exec-8] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:57.206  INFO 13798 --- [http-nio-8080-exec-9] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:57.227  INFO 13798 --- [http-nio-8080-exec-10] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:57.247  INFO 13798 --- [http-nio-8080-exec-1] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:57.850 ERROR 13798 --- [http-nio-8080-exec-2] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:38:57.955  INFO 13798 --- [http-nio-8080-exec-3] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:58.126  WARN 13798 --- [http-nio-8080-exec-4] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:58.263  INFO 13798 --- [http-nio-8080-exec-5] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:58.412  WARN 13798 --- [http-nio-8080-exec-6] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:58.565  INFO 13798 --- [http-nio-8080-exec-7] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:58.730  INFO 13798 --- [http-nio-8080-exec-8] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:58.900  WARN 13798 --- [http-nio-8080-exec-9] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:59.045  WARN 13798 --- [http-nio-8080-exec-10] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:59.215  WARN 13798 --- [http-nio-8080-exec-1] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:59.381  INFO 13798 --- [http-nio-8080-exec-2] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:38:59.545  WARN 13798 --- [http-nio-8080-exec-3] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:59.699  WARN 13798 --- [http-nio-8080-exec-4] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:38:59.859  WARN 13798 --- [http-nio-8080-exec-5] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:39:15.414  INFO 13798 --- [http-nio-8080-exec-6] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:39:15.917  INFO 13798 --- [http-nio-8080-exec-7] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:39:15.969  WARN 13798 --- [http-nio-8080-exec-8] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:39:16.000 ERROR 13798 --- [http-nio-8080-exec-9] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:39:16.042  INFO 13798 --- [http-nio-8080-exec-10] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:39:16.079  INFO 13798 --- [http-nio-8080-exec-1] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:39:16.207  INFO 13798 --- [http-nio-8080-exec-2] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:39:16.241  WARN 13798 --- [http-nio-8080-exec-3] pl.demo.elk.controller.LogController     : Be careful
+2018-11-20 19:39:16.298 ERROR 13798 --- [http-nio-8080-exec-4] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:39:16.333  INFO 13798 --- [http-nio-8080-exec-5] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:39:16.371  INFO 13798 --- [http-nio-8080-exec-6] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:39:16.418 ERROR 13798 --- [http-nio-8080-exec-7] pl.demo.elk.controller.LogController     : Failure
+2018-11-20 19:39:16.450  INFO 13798 --- [http-nio-8080-exec-8] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:39:16.547  INFO 13798 --- [http-nio-8080-exec-9] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:39:16.566  INFO 13798 --- [http-nio-8080-exec-10] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:39:16.619  INFO 13798 --- [http-nio-8080-exec-1] pl.demo.elk.controller.LogController     : Successful
+2018-11-20 19:54:47.138  INFO 13798 --- [Thread-13] ationConfigEmbeddedWebApplicationContext : Closing org.springframework.boot.context.embedded.AnnotationConfigEmbeddedWebApplicationContext@7bb58ca3: startup date [Tue Nov 20 19:32:07 CET 2018]; root of context hierarchy
+2018-11-20 19:54:47.141  INFO 13798 --- [Thread-13] o.s.j.e.a.AnnotationMBeanExporter        : Unregistering JMX-exposed beans on shutdown
