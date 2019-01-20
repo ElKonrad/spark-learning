@@ -1,11 +1,14 @@
-import conf.MySparkConf
+package pl.spark.learning.rdd
+
+import pl.spark.learning.conf.MySparkConf
 import org.apache.spark.SparkContext
+import pl.spark.learning.ResourceHelper
 
 object LogQuery {
 
   def main(args: Array[String]) {
 
-    val sc = new SparkContext(MySparkConf.get("Log Query"))
+    val sc = new SparkContext(MySparkConf.sparkConf("Log Query"))
 
     val dataSet = sc.textFile(ResourceHelper.getResourceFilepath("sl4j-spring-boot.txt"))
     val apacheLogRegex =

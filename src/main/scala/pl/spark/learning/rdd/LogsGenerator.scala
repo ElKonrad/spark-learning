@@ -1,3 +1,5 @@
+package pl.spark.learning.rdd
+
 import java.io.{File, PrintWriter}
 import java.text.SimpleDateFormat
 import java.time.{LocalDateTime, ZoneOffset}
@@ -16,9 +18,9 @@ object LogsGenerator {
 
     val limit = 1000000
 
-    val orders = new PrintWriter(new File("src/main/resources/orders.txt"))
+    val orders = new PrintWriter(new File("src/main/resources/pl/spark/learning/orders.txt"))
 
-    val visits = new PrintWriter(new File("src/main/resources/visits.txt"))
+    val visits = new PrintWriter(new File("src/main/resources/pl/spark/learning/visits.txt"))
 
     val customers = (0 to 100).map(r => "c" + r)
 

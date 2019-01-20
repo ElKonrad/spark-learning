@@ -1,10 +1,12 @@
-import conf.MySparkConf
-import org.apache.spark.{SparkConf, SparkContext}
+package pl.spark.learning.rdd
+
+import pl.spark.learning.conf.MySparkConf
+import org.apache.spark.SparkContext
 
 object BroadcastTest {
   def main(args: Array[String]) {
 
-    val sparkConf = MySparkConf.get("spark-broadcast")
+    val sparkConf = MySparkConf.sparkConf("spark-broadcast")
     val sc = new SparkContext(sparkConf)
 
     val slices = 2

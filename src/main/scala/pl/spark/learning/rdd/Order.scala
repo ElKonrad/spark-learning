@@ -1,18 +1,21 @@
+package pl.spark.learning.rdd
+
 import java.text.SimpleDateFormat
 import java.util.Date
 
-import conf.MySparkConf
+import pl.spark.learning.conf.MySparkConf
 import org.apache.spark.{SparkConf, SparkContext}
+import pl.spark.learning.ResourceHelper
 
 object Order {
 
   def main(args: Array[String]): Unit = {
-    val sparkConf: SparkConf = MySparkConf.get("spark-orders")
+    val sparkConf: SparkConf = MySparkConf.sparkConf("spark-orders")
     val sc = new SparkContext(sparkConf)
     val dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss")
 
-    val ordersInput = sc.textFile(ResourceHelper.getResourceFilepath("orders.txt"))
-    val visitsInput = sc.textFile(ResourceHelper.getResourceFilepath("visits.txt"))
+    val ordersInput = sc.textFile(ResourceHelper.getResourceFilepath("pl/spark/learning/orders.txt"))
+    val visitsInput = sc.textFile(ResourceHelper.getResourceFilepath("pl/spark/learning/visits.txt"))
 
     val orders = ordersInput.map(line => line.split(" "))
       .map(w => Order(dateFormat.parse(w(0) + " " + w(1)), w(2), w(3), w(4)))

@@ -1,5 +1,8 @@
-import conf.MySparkConf
+package pl.spark.learning.rdd
+
+import pl.spark.learning.conf.MySparkConf
 import org.apache.spark.{SparkConf, SparkContext}
+import pl.spark.learning.ResourceHelper
 
 import scala.util.Random
 
@@ -9,7 +12,7 @@ object Aggregation {
     .map(airline => (airline, Random.nextInt(10)))
 
   def main(args: Array[String]): Unit = {
-    val sparkConf: SparkConf = MySparkConf.get("spark-aggregation")
+    val sparkConf: SparkConf = MySparkConf.sparkConf("spark-aggregation")
     val sc = new SparkContext(sparkConf)
 
     val input = sc.textFile(ResourceHelper.getResourceFilepath("randomtext.txt"))

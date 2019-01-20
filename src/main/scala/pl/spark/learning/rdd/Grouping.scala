@@ -1,10 +1,12 @@
-import conf.MySparkConf
+package pl.spark.learning.rdd
+
+import pl.spark.learning.conf.MySparkConf
 import org.apache.spark.{SparkConf, SparkContext}
 
 object Grouping {
 
   def main(args: Array[String]): Unit = {
-    val sparkConf: SparkConf = MySparkConf.get("spark-grouping")
+    val sparkConf: SparkConf = MySparkConf.sparkConf("spark-grouping")
     val sc = new SparkContext(sparkConf)
 
     val storeAddress = sc.parallelize(List(
