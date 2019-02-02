@@ -14,8 +14,8 @@ object Order {
     val sc = new SparkContext(sparkConf)
     val dateFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm:ss")
 
-    val ordersInput = sc.textFile(ResourceHelper.getResourceFilepath("pl/spark/learning/orders.txt"))
-    val visitsInput = sc.textFile(ResourceHelper.getResourceFilepath("pl/spark/learning/visits.txt"))
+    val ordersInput = sc.textFile(ResourceHelper.getResourceFilepath("orders.txt"))
+    val visitsInput = sc.textFile(ResourceHelper.getResourceFilepath("visits.txt"))
 
     val orders = ordersInput.map(line => line.split(" "))
       .map(w => Order(dateFormat.parse(w(0) + " " + w(1)), w(2), w(3), w(4)))
