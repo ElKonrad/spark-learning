@@ -10,9 +10,11 @@ import net.liftweb.json._
 
 import scala.util.Random
 
-object LogGenerator {
+object EventsLogGenerator {
 
   implicit val formats = Serialization.formats(NoTypeHints) + new UUIDserializer
+
+  val limitSizeFileInMb: Double = 0.1
 
   val DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS"
 
@@ -47,9 +49,9 @@ object LogGenerator {
   def eventNameBy(logLevel: String, event: Event): String = {
     logLevel match {
       case "INFO" => event.eventName
-      case "DEBUG" => "pl.spark.learning.generators.RetriedExternalService"
-      case "WARN" => "pl.spark.learning.generators.RetryConnectToExternalService"
-      case "ERROR" => "pl.spark.learning.generators.EventProcessingException"
+      case "DEBUG" => "RetriedExternalService"
+      case "WARN" => "RetryConnectToExternalService"
+      case "ERROR" => "EventProcessingException"
     }
   }
 
@@ -119,7 +121,7 @@ object LogGenerator {
       case "INFO" => event
       case _ => null
     }
-    s"$date $logLvl $pid --- [$thread] ${eventNameBy(logLvl, e)} : ${messageBy(logLvl, e)}\n"
+    s"$date $logLvl $pid --- [$thread] ${eventNameBy(logLvl, e)}:${messageBy(logLvl, e)}\n"
   }
 
   def main(args: Array[String]): Unit = {
@@ -128,7 +130,7 @@ object LogGenerator {
     val file = new File("src/main/resources/pl/spark/learning//logsexample.txt")
     val fw = new FileWriter(file, true)
     try {
-      while (file.length() < 100000) {
+      while (file.length() < limitSizeFileInMb * 1000000) {
         fw.write(randomLog())
 
         if (counter % 1000 == 0)
