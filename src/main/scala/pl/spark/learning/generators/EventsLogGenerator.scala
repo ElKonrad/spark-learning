@@ -7,6 +7,7 @@ import java.util.{Date, UUID}
 
 import net.liftweb.json.JsonAST.JString
 import net.liftweb.json._
+import org.joda.time.DateTime
 
 import scala.util.Random
 
@@ -17,6 +18,7 @@ object EventsLogGenerator {
   val limitSizeFileInMb: Double = 0.1
 
   val DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS"
+  var nowDate = DateTime.now()
 
   val customerIds: List[UUID] = (0 to 5000).map(_ => UUID.randomUUID()).toList
   var eventsData: collection.mutable.Map[UUID, List[Event]] = collection.mutable.Map().withDefaultValue(List.empty[Event])
@@ -28,7 +30,7 @@ object EventsLogGenerator {
 
   def removeOrder(orderId: UUID): Unit = eventsData.remove(orderId)
 
-  def date: String = new SimpleDateFormat(DATE_FORMAT).format(new Date())
+  def date: String = new SimpleDateFormat(DATE_FORMAT).format(nowDatePlusRandomMinutes)
 
   def logLevel: String = {
     val p = Math.random()
@@ -86,22 +88,22 @@ object EventsLogGenerator {
 
     if (eventsDataSize == 1) {
 
-      val orderValidated = OrderValidated(UUID.randomUUID(), maybeOrderId, new Date())
+      val orderValidated = OrderValidated(UUID.randomUUID(), maybeOrderId, nowDatePlusRandomMinutes)
       addEvent(maybeOrderId, orderValidated)
       orderValidated
     } else if (eventsDataSize == 2) {
 
-      val orderApproved = OrderApproved(UUID.randomUUID(), maybeOrderId, new Date())
+      val orderApproved = OrderApproved(UUID.randomUUID(), maybeOrderId, nowDatePlusRandomMinutes)
       addEvent(maybeOrderId, orderApproved)
       orderApproved
     } else if (eventsDataSize == 3) {
 
-      val orderShipped = OrderShipped(UUID.randomUUID(), maybeOrderId, new Date())
+      val orderShipped = OrderShipped(UUID.randomUUID(), maybeOrderId, nowDatePlusRandomMinutes)
       addEvent(maybeOrderId, orderShipped)
       orderShipped
     } else if (eventsDataSize == 4) {
 
-      val orderCompleted = OrderCompleted(UUID.randomUUID(), maybeOrderId, new Date())
+      val orderCompleted = OrderCompleted(UUID.randomUUID(), maybeOrderId, nowDatePlusRandomMinutes)
       removeOrder(maybeOrderId)
       orderCompleted
     } else {
@@ -109,10 +111,15 @@ object EventsLogGenerator {
       val customerId = customerIds(Random.nextInt(customerIds.size))
       val orderedItems = (1 to Random.nextInt(2) + 1).map(t => Item(UUID.randomUUID(), s"Some item $t", Random.nextInt(5), Random.nextInt(10000).toDouble)).toList
 
-      val orderCreated = OrderCreated(orderId, customerId, orderedItems, new Date())
+      val orderCreated = OrderCreated(UUID.randomUUID(), orderId, customerId, orderedItems, new Date())
       addEvent(orderId, orderCreated)
       orderCreated
     }
+  }
+
+  def nowDatePlusRandomMinutes: Date = {
+    nowDate = nowDate.plusSeconds(Random.nextInt(60))
+    nowDate.toDate
   }
 
   def randomLog(): String = {
@@ -133,8 +140,10 @@ object EventsLogGenerator {
       while (file.length() < limitSizeFileInMb * 1000000) {
         fw.write(randomLog())
 
-        if (counter % 1000 == 0)
+        if (counter % 10000 == 0) {
           println(1.0 * file.length() / 1000000 + "\t" + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start))
+          counter = 0
+        }
         counter = counter + 1
       }
     } finally fw.close()
@@ -154,7 +163,7 @@ trait OrderEvent extends Event {
   val status: String
 }
 
-case class OrderCreated(override val id: UUID, customerId: UUID, items: List[Item], createdDate: Date,
+case class OrderCreated(override val id: UUID, orderId: UUID, customerId: UUID, items: List[Item], createdDate: Date,
                         override val eventName: String = "OrderCreated",
                         override val status: String = CREATED.toString) extends OrderEvent
 
