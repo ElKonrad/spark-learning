@@ -76,21 +76,48 @@ object EventsLogProcessing {
         .foreach(println)
     }
 
-    def ordersLongestTimeLasted(orderNumberToTake: Int): Unit = {
+    def ordersLongestTimeLasted(ordersToTake: Int): Unit = {
       dataSet.map(extractLog)
         .filter(_.isDefined)
         .map(_.get)
         .groupBy(_.orderId)
         .filter(isCompleted)
         .map(orderTimeInMillis)
-        .sortBy(p => p._2, false)
+        .sortBy(p => p._2, ascending = false)
         .map(orderTimeToDays)
-        .take(orderNumberToTake)
+        .take(ordersToTake)
+        .foreach(println)
+    }
+
+    def ordersLongestTimeLastedFromApprovedToShipped(ordersToTake: Int): Unit = {
+      dataSet.map(extractLog)
+        .filter(_.isDefined)
+        .map(_.get)
+        .groupBy(_.orderId)
+        .filter(order => isShipped(order) || isCompleted(order))
+        .map(orderTimeFromApprovedToShippedInMillis)
+        .sortBy(p => p._2, ascending = false)
+        .map(orderTimeToDays)
+        .take(ordersToTake)
+        .foreach(println)
+    }
+
+    def customersWithMostOrders(customersToTake: Int): Unit = {
+      dataSet.map(extractLog)
+        .filter(_.isDefined)
+        .map(_.get)
+        .flatMap(_.customerId)
+        .map(c => (c, 1))
+        .reduceByKey((a, b) => a + b)
+        .sortBy(_._2, ascending = false)
+        .take(customersToTake)
         .foreach(println)
     }
 
     groupedOrderEventsCount()
-    ordersLongestTimeLasted(orderNumberToTake = 5)
+    ordersLongestTimeLasted(ordersToTake = 10)
+    ordersLongestTimeLastedFromApprovedToShipped(ordersToTake = 10)
+    customersWithMostOrders(customersToTake = 10)
 
     sc.stop()
   }
@@ -99,9 +126,21 @@ object EventsLogProcessing {
     tuple._2.size == 5
   }
 
+  private def isShipped(tuple: (UUID, Iterable[OrderData])): Boolean = {
+    tuple._2.size == 4
+  }
+
   private def orderTimeInMillis(order: (UUID, Iterable[OrderData])): (UUID, Long) = {
     val orders = order._2
     val diff = orders.last.completedDate.get.getTime - orders.head.createdDate.get.getTime
+    (order._1, diff)
+  }
+
+  private def orderTimeFromApprovedToShippedInMillis(order: (UUID, Iterable[OrderData])): (UUID, Long) = {
+    val orders = order._2.toList
+    val approved = orders(3)
+    val shipped = orders(2)
+    val diff = approved.shippedDate.get.getTime - shipped.approvedDate.get.getTime
     (order._1, diff)
   }
 

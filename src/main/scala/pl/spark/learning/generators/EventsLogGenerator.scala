@@ -118,7 +118,7 @@ object EventsLogGenerator {
   }
 
   def nowDatePlusRandomMinutes: Date = {
-    nowDate = nowDate.plusSeconds(Random.nextInt(60))
+    nowDate = nowDate.plusSeconds(Random.nextInt(15))
     nowDate.toDate
   }
 
