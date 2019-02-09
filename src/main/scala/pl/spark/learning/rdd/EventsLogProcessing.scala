@@ -76,7 +76,7 @@ object EventsLogProcessing {
         .foreach(println)
     }
 
-    def longestTimeLastedOrders(ordersNumberToTake: Int): Unit = {
+    def ordersLongestTimeLasted(orderNumberToTake: Int): Unit = {
       dataSet.map(extractLog)
         .filter(_.isDefined)
         .map(_.get)
@@ -85,12 +85,12 @@ object EventsLogProcessing {
         .map(orderTimeInMillis)
         .sortBy(p => p._2, false)
         .map(orderTimeToDays)
-        .take(ordersNumberToTake)
+        .take(orderNumberToTake)
         .foreach(println)
     }
 
     groupedOrderEventsCount()
-    longestTimeLastedOrders(ordersNumberToTake = 5)
+    ordersLongestTimeLasted(orderNumberToTake = 5)
 
     sc.stop()
   }
@@ -106,7 +106,8 @@ object EventsLogProcessing {
   }
 
   private def orderTimeToDays(p: (UUID, Long)): (UUID, Long) = {
-    (p._1, TimeUnit.MILLISECONDS.toDays(p._2))
+    val (orderId: UUID, timeInMillis: Long) = p
+    (orderId, TimeUnit.MILLISECONDS.toDays(timeInMillis))
   }
 
 }
