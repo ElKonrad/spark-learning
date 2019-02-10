@@ -20,7 +20,7 @@ object EventsLogGenerator {
   val DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS"
   var nowDate = DateTime.now()
 
-  val customerIds: List[UUID] = (0 to 5000).map(_ => UUID.randomUUID()).toList
+  val customerIds: List[UUID] = (0 to 10000).map(_ => UUID.randomUUID()).toList
   var eventsData: collection.mutable.Map[UUID, List[Event]] = collection.mutable.Map().withDefaultValue(List.empty[Event])
 
   def addEvent(orderId: UUID, event: Event): Unit = eventsData(orderId) match {
@@ -109,9 +109,17 @@ object EventsLogGenerator {
     } else {
       val orderId = UUID.randomUUID()
       val customerId = customerIds(Random.nextInt(customerIds.size))
-      val orderedItems = (1 to Random.nextInt(2) + 1).map(t => Item(UUID.randomUUID(), s"Some item $t", Random.nextInt(5), Random.nextInt(10000).toDouble)).toList
+      val category = Random.nextInt(5) match {
+        case 0 => BOOKS.toString
+        case 1 => AUTOMOTIVE.toString
+        case 2 => FASHION.toString
+        case 3 => SOFTWARE.toString
+        case 4 => SPORTS.toString
+      }
+      val orderedItems = (1 to Random.nextInt(2) + 1)
+        .map(t => Item(UUID.randomUUID(), s"Some item $t", Random.nextInt(5), Random.nextInt(10000).toDouble, category)).toList
 
-      val orderCreated = OrderCreated(UUID.randomUUID(), orderId, customerId, orderedItems, new Date())
+      val orderCreated = OrderCreated(UUID.randomUUID(), orderId, customerId, orderedItems, nowDatePlusRandomMinutes)
       addEvent(orderId, orderCreated)
       orderCreated
     }
@@ -183,7 +191,7 @@ case class OrderCompleted(override val id: UUID, orderId: UUID, completedDate: D
                           override val eventName: String = "OrderCompleted",
                           override val status: String = COMPLETED.toString) extends OrderEvent
 
-case class Item(id: UUID, description: String, quantity: Int, price: Double)
+case class Item(id: UUID, description: String, quantity: Int, price: Double, category: String)
 
 sealed trait Status
 
@@ -196,6 +204,18 @@ case object APPROVED extends Status
 case object SHIPPED extends Status
 
 case object COMPLETED extends Status
+
+sealed trait Category
+
+case object BOOKS extends Category
+
+case object AUTOMOTIVE extends Category
+
+case object FASHION extends Category
+
+case object SOFTWARE extends Category
+
+case object SPORTS extends Category
 
 class UUIDserializer extends Serializer[UUID] {
 
