@@ -5,6 +5,7 @@ import java.text.SimpleDateFormat
 import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 
+import com.google.gson.{Gson, JsonSyntaxException}
 import net.liftweb.json.JsonAST.JString
 import net.liftweb.json._
 import org.joda.time.DateTime
@@ -130,31 +131,52 @@ object EventsLogGenerator {
     nowDate.toDate
   }
 
-  def randomLog(): String = {
+  def randomLog(): (String, String) = {
     val logLvl = logLevel
     val e = logLvl match {
       case "INFO" => event
       case _ => null
     }
-    s"$date $logLvl $pid --- [$thread] ${eventNameBy(logLvl, e)}:${messageBy(logLvl, e)}\n"
+
+    val eventName = eventNameBy(logLvl, e)
+    val message = messageBy(logLvl, e)
+    (s"$date $logLvl $pid --- [$thread] $eventName:$message\n", message)
   }
 
   def main(args: Array[String]): Unit = {
+    val gson = new Gson()
+
+    def isValidJson(json: String): Boolean = try {
+      gson.fromJson(json, classOf[Object])
+      true
+    } catch {
+      case _: JsonSyntaxException => false
+    }
+
     var counter = 0
     val start = System.currentTimeMillis()
-    val file = new File("src/main/resources/pl/spark/learning//logsexample.txt")
-    val fw = new FileWriter(file, true)
+    val fileTxt = new File("src/main/resources/pl/spark/learning//logsexample.txt")
+    val fileJson = new File("src/main/resources/pl/spark/learning//logsexample.json")
+    val fwTxt = new FileWriter(fileTxt, true)
+    val fwJson = new FileWriter(fileJson, true)
     try {
-      while (file.length() < limitSizeFileInMb * 1000000) {
-        fw.write(randomLog())
+      while (fileTxt.length() < limitSizeFileInMb * 1000000) {
+        val log = randomLog()
+        fwTxt.write(log._1)
+
+        if (isValidJson(log._2))
+          fwJson.write(log._2 + "\n")
 
         if (counter % 10000 == 0) {
-          println(1.0 * file.length() / 1000000 + "\t" + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start))
+          println(1.0 * fileTxt.length() / 1000000 + "\t" + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start))
           counter = 0
         }
         counter = counter + 1
       }
-    } finally fw.close()
+    } finally {
+      fwTxt.close()
+      fwJson.close()
+    }
     val end = System.currentTimeMillis()
     println("Seconds: " + TimeUnit.MILLISECONDS.toSeconds(end - start))
     println("Minutes: " + TimeUnit.MILLISECONDS.toMinutes(end - start))

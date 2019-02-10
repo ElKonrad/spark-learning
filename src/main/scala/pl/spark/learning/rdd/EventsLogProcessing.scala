@@ -12,7 +12,7 @@ import pl.spark.learning.generators._
 object EventsLogProcessing {
   def main(args: Array[String]) {
 
-    val sc = new SparkContext(MySparkConf.sparkConf("Events log processor"))
+    val sc = new SparkContext(MySparkConf.sparkConf("RDD Events log processor"))
 
     val dataSet = sc.textFile(ResourceHelper.getResourceFilepath("logsexample.txt"))
     val apacheLogRegex =
