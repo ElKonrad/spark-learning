@@ -76,7 +76,7 @@ object EventsLogProcessing {
         .foreach(println)
     }
 
-    def ordersLongestTimeLasted(ordersToTake: Int): Unit = {
+    def ordersLongestTimeLastedInDays(ordersToTake: Int): Unit = {
       dataSet.map(extractLog)
         .filter(_.isDefined)
         .map(_.get)
@@ -89,7 +89,7 @@ object EventsLogProcessing {
         .foreach(println)
     }
 
-    def ordersLongestTimeLastedFromApprovedToShipped(ordersToTake: Int): Unit = {
+    def ordersLongestTimeLastedFromApprovedToShippedInDays(ordersToTake: Int): Unit = {
       dataSet.map(extractLog)
         .filter(_.isDefined)
         .map(_.get)
@@ -114,9 +114,13 @@ object EventsLogProcessing {
         .foreach(println)
     }
 
+    println("groupedOrderEventsCount")
     groupedOrderEventsCount()
-    ordersLongestTimeLasted(ordersToTake = 10)
-    ordersLongestTimeLastedFromApprovedToShipped(ordersToTake = 10)
+    println("ordersLongestTimeLastedInDays")
+    ordersLongestTimeLastedInDays(ordersToTake = 10)
+    println("ordersLongestTimeLastedFromApprovedToShippedInDays")
+    ordersLongestTimeLastedFromApprovedToShippedInDays(ordersToTake = 10)
+    println("customersWithMostOrders")
     customersWithMostOrders(customersToTake = 10)
 
     sc.stop()

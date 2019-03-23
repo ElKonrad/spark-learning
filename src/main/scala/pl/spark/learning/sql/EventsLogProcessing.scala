@@ -1,5 +1,6 @@
 package pl.spark.learning.sql
 
+import java.util.Objects.nonNull
 import java.util.concurrent.TimeUnit
 
 import org.apache.spark.sql.expressions.Aggregator
@@ -24,21 +25,21 @@ object EventsLogProcessing {
       .orderBy("count")
       .show()
 
-    val orderAgg = OrdersLongestTimeLasted.toColumn.name("ordersLongestTimeLasted")
+    val orderAgg = OrdersLongestDuration.toColumn.name("ordersLongestDuration")
     orderData
       .groupByKey(_.orderId)
       .agg(orderAgg)
       .filter(_._2 >= 0)
-      .orderBy(desc("ordersLongestTimeLasted"))
+      .orderBy(desc("ordersLongestDuration"))
       .limit(10)
       .show(false)
 
-    val orderAgg2 = OrdersLongestTimeLastedFromApprovedToShipped.toColumn.name("ordersLongestTimeLastedFromApprovedToShipped")
+    val orderAgg2 = OrdersLongestDurationFromApprovedToShipped.toColumn.name("ordersLongestDurationFromApprovedToShipped")
     orderData
       .groupByKey(_.orderId)
       .agg(orderAgg2)
       .filter(_._2 >= 0)
-      .orderBy(desc("ordersLongestTimeLastedFromApprovedToShipped"))
+      .orderBy(desc("ordersLongestDurationFromApprovedToShipped"))
       .limit(10)
       .show(false)
 
@@ -53,34 +54,23 @@ object EventsLogProcessing {
     spark.stop()
   }
 
-  case class OrderTemp(var id: String, var createdDate: Long, var completedDate: Long)
+  case class OrderFromCreatedToCompleted(var id: String, var createdDate: Long, var completedDate: Long)
 
-  object OrdersLongestTimeLasted extends Aggregator[OrderData, OrderTemp, Long] {
-    def zero: OrderTemp = OrderTemp(null, 0L, 0L)
+  object OrdersLongestDuration extends Aggregator[OrderData, OrderFromCreatedToCompleted, Long] {
+    def zero: OrderFromCreatedToCompleted = OrderFromCreatedToCompleted(null, 0L, 0L)
 
-    def reduce(buffer: OrderTemp, orderData: OrderData): OrderTemp = {
-      def toDate(d: String): Long = {
-        import java.text.SimpleDateFormat
-        import java.util.{Calendar, TimeZone}
-        val tz = TimeZone.getTimeZone("Europe/Warsaw")
-        val cal = Calendar.getInstance(tz)
-        val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-        sdf.setCalendar(cal)
-        cal.setTime(sdf.parse(d))
-        cal.getTime.getTime
-      }
-
+    def reduce(buffer: OrderFromCreatedToCompleted, orderData: OrderData): OrderFromCreatedToCompleted = {
       buffer.id = orderData.orderId
-      if (orderData.createdDate != null) {
+      if (nonNull(orderData.createdDate)) {
         buffer.createdDate = toDate(orderData.createdDate)
       }
-      if (orderData.completedDate != null) {
+      if (nonNull(orderData.completedDate)) {
         buffer.completedDate = toDate(orderData.completedDate)
       }
       buffer
     }
 
-    def merge(b1: OrderTemp, b2: OrderTemp): OrderTemp = {
+    def merge(b1: OrderFromCreatedToCompleted, b2: OrderFromCreatedToCompleted): OrderFromCreatedToCompleted = {
       if (b2.id != null)
         b1.id = b2.id
       if (b2.createdDate != 0L)
@@ -90,55 +80,55 @@ object EventsLogProcessing {
       b1
     }
 
-    def finish(reduction: OrderTemp): Long = TimeUnit.MILLISECONDS.toDays(reduction.completedDate - reduction.createdDate)
+    def finish(reduction: OrderFromCreatedToCompleted): Long = TimeUnit.MILLISECONDS.toDays(reduction.completedDate - reduction.createdDate)
 
-    def bufferEncoder: Encoder[OrderTemp] = Encoders.product
+    def bufferEncoder: Encoder[OrderFromCreatedToCompleted] = Encoders.product
 
     def outputEncoder: Encoder[Long] = Encoders.scalaLong
   }
 
-  case class OrderTemp2(var id: String, var approvedDate: Long, var shippedDate: Long)
+  case class OrderFromApprovedToShipped(var id: String, var approvedDate: Long, var shippedDate: Long)
 
-  object OrdersLongestTimeLastedFromApprovedToShipped extends Aggregator[OrderData, OrderTemp2, Long] {
-    def zero: OrderTemp2 = OrderTemp2(null, 0L, 0L)
+  object OrdersLongestDurationFromApprovedToShipped extends Aggregator[OrderData, OrderFromApprovedToShipped, Long] {
+    def zero: OrderFromApprovedToShipped = OrderFromApprovedToShipped(null, 0L, 0L)
 
-    def reduce(buffer: OrderTemp2, orderData: OrderData): OrderTemp2 = {
-      def toDate(d: String): Long = {
-        import java.text.SimpleDateFormat
-        import java.util.{Calendar, TimeZone}
-        val tz = TimeZone.getTimeZone("Europe/Warsaw")
-        val cal = Calendar.getInstance(tz)
-        val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-        sdf.setCalendar(cal)
-        cal.setTime(sdf.parse(d))
-        cal.getTime.getTime
-      }
-
+    def reduce(buffer: OrderFromApprovedToShipped, orderData: OrderData): OrderFromApprovedToShipped = {
       buffer.id = orderData.orderId
-      if (orderData.approvedDate != null) {
+      if (nonNull(orderData.approvedDate)) {
         buffer.approvedDate = toDate(orderData.approvedDate)
       }
-      if (orderData.shippedDate != null) {
+      if (nonNull(orderData.shippedDate)) {
         buffer.shippedDate = toDate(orderData.shippedDate)
       }
       buffer
     }
 
-    def merge(b1: OrderTemp2, b2: OrderTemp2): OrderTemp2 = {
-      if (b2.id != null)
+    def merge(b1: OrderFromApprovedToShipped, b2: OrderFromApprovedToShipped): OrderFromApprovedToShipped = {
+      if (nonNull(b2.id))
         b1.id = b2.id
-      if (b2.approvedDate != 0L)
+      if (nonNull(b2.approvedDate))
         b1.approvedDate = b2.approvedDate
-      if (b2.shippedDate != 0L)
+      if (nonNull(b2.shippedDate))
         b1.shippedDate = b2.shippedDate
       b1
     }
 
-    def finish(reduction: OrderTemp2): Long = TimeUnit.MILLISECONDS.toDays(reduction.shippedDate - reduction.approvedDate)
+    def finish(reduction: OrderFromApprovedToShipped): Long = TimeUnit.MILLISECONDS.toDays(reduction.shippedDate - reduction.approvedDate)
 
-    def bufferEncoder: Encoder[OrderTemp2] = Encoders.product
+    def bufferEncoder: Encoder[OrderFromApprovedToShipped] = Encoders.product
 
     def outputEncoder: Encoder[Long] = Encoders.scalaLong
+  }
+
+  def toDate(d: String): Long = {
+    import java.text.SimpleDateFormat
+    import java.util.{Calendar, TimeZone}
+    val tz = TimeZone.getTimeZone("Europe/Warsaw")
+    val cal = Calendar.getInstance(tz)
+    val sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+    sdf.setCalendar(cal)
+    cal.setTime(sdf.parse(d))
+    cal.getTime.getTime
   }
 
 }
@@ -153,7 +143,6 @@ case class OrderData(id: String,
                      validatedDate: String,
                      approvedDate: String,
                      shippedDate: String,
-                     completedDate: String
-                    )
+                     completedDate: String)
 
 case class Item(id: String, description: String, quantity: String, price: Double, category: String)

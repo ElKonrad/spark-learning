@@ -2,173 +2,161 @@ package pl.spark.learning.generators
 
 import java.io.{File, FileWriter}
 import java.text.SimpleDateFormat
-import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeUnit.MILLISECONDS
 import java.util.{Date, UUID}
 
-import com.google.gson.{Gson, JsonSyntaxException}
-import net.liftweb.json.JsonAST.JString
 import net.liftweb.json._
 import org.joda.time.DateTime
 
 import scala.util.Random
 
 object EventsLogGenerator {
-
   implicit val formats = Serialization.formats(NoTypeHints) + new UUIDserializer
 
   val limitSizeFileInMb: Double = 0.1
 
+  val threeDaysInSeconds = 259200
   val DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS"
+
   var nowDate = DateTime.now()
+  val customerIds: List[UUID] = (0 to 1000000).map(_ => UUID.randomUUID()).toList
 
-  val customerIds: List[UUID] = (0 to 10000).map(_ => UUID.randomUUID()).toList
-  var eventsData: collection.mutable.Map[UUID, List[Event]] = collection.mutable.Map().withDefaultValue(List.empty[Event])
+  var allEventsData: collection.mutable.Map[UUID, List[Event]] = collection.mutable.Map().withDefaultValue(List.empty[Event])
 
-  def addEvent(orderId: UUID, event: Event): Unit = eventsData(orderId) match {
-    case xs: List[Event] => eventsData(orderId) = xs :+ event
-    case _ => eventsData(orderId) = List(event)
+  def addEvent(orderId: UUID, event: Event): Unit = allEventsData(orderId) match {
+    case xs: List[Event] => allEventsData(orderId) = xs :+ event
+    case _ => allEventsData(orderId) = List(event)
   }
 
-  def removeOrder(orderId: UUID): Unit = eventsData.remove(orderId)
+  def removeOrder(orderId: UUID): Unit = allEventsData.remove(orderId)
 
-  def date: String = new SimpleDateFormat(DATE_FORMAT).format(nowDatePlusRandomMinutes)
+  def date: String = new SimpleDateFormat(DATE_FORMAT).format(nowDate.toDate)
 
-  def logLevel: String = {
-    val p = Math.random()
+  def nowDatePlusRandomMillis: Date = {
+    nowDate = nowDate.plusMillis(randomBetween(1, 500))
+    nowDate.toDate
+  }
 
-    if (0 <= p && p < 0.10) "ERROR"
-    else if (0.10 <= p && p < 0.15) "WARN"
-    else if (0.15 <= p && p < 0.20) "DEBUG"
-    else "INFO"
+  def randomBetween(minInclusive: Int, maxExclusive: Int): Int = {
+    require(minInclusive < maxExclusive, "Invalid bounds")
+
+    val difference = maxExclusive - minInclusive
+    Random.nextInt(difference) + minInclusive
   }
 
   def pid: String = Random.nextInt(20000).toString
 
   def thread: String = {
     val thread = Random.nextInt(50)
-    s"http-nio-exec-$thread"
+    s"thread-$thread"
   }
 
-  def eventNameBy(logLevel: String, event: Event): String = {
-    logLevel match {
-      case "INFO" => event.eventName
-      case "DEBUG" => "RetriedExternalService"
-      case "WARN" => "RetryConnectToExternalService"
-      case "ERROR" => "EventProcessingException"
-    }
+  def orderValidatedDate(lastEvent: OrderCreated): Date = {
+    new DateTime(lastEvent.createdDate).plusSeconds(randomBetween(1, 300)).toDate
   }
 
-  def messageBy(logLevel: String, event: Event): String = {
-    logLevel match {
-      case "INFO" =>
-        Serialization.write(event)
-      case "DEBUG" =>
-        s"Retried to external service ${Random.nextInt(10)} times"
-      case "WARN" =>
-        "Retry connect to external service"
-      case "ERROR" =>
-        "Cannot process event"
-    }
+  def orderApprovedDate(lastEvent: OrderValidated): Date = {
+    new DateTime(lastEvent.validatedDate).plusSeconds(randomBetween(1, 1800)).toDate
+  }
+
+  def orderShippedDate(lastEvent: OrderApproved): Date = {
+    val p = Math.random()
+
+    if (0 <= p && p < 0.03) new DateTime(lastEvent.approvedDate).plusDays(randomBetween(30, 60)).toDate
+    else if (0.03 <= p && p < 0.10) new DateTime(lastEvent.approvedDate).plusDays(randomBetween(10, 30)).toDate
+    else if (0.10 <= p && p < 0.55) new DateTime(lastEvent.approvedDate).plusDays(randomBetween(3, 10)).toDate
+    else new DateTime(lastEvent.approvedDate).plusSeconds(randomBetween(1, threeDaysInSeconds)).toDate
+  }
+
+  def orderCompletedDate(lastEvent: OrderShipped): Date = {
+    val p = Math.random()
+
+    if (0 <= p && p < 0.10) new DateTime(lastEvent.shippedDate).plusDays(randomBetween(7, 14)).toDate
+    else if (0.10 <= p && p < 0.50) new DateTime(lastEvent.shippedDate).plusDays(randomBetween(3, 7)).toDate
+    else new DateTime(lastEvent.shippedDate).plusSeconds(randomBetween(1, threeDaysInSeconds)).toDate
   }
 
   def event: Event = {
-    val eventsDataKeys = eventsData.keys.toList
+    val eventsDataKeys = allEventsData.keys.toList
 
     def getUUID: UUID = {
-      if (eventsDataKeys.isEmpty || eventsDataKeys.size < 50)
+      if (eventsDataKeys.isEmpty || eventsDataKeys.size < 100)
         UUID.randomUUID()
-      else if (eventsData.groupBy(p => p._2.size).exists(p => p._2.size > 100))
-        eventsData.find(p => (1 to 4).contains(p._2.size)).get._1
+      else if (allEventsData.groupBy(_._2.size).exists(_._2.size > 100))
+        allEventsData.find(p => (1 to 4).contains(p._2.size)).get._1
       else
-        eventsDataKeys(Random.nextInt(eventsData.size))
+        eventsDataKeys(Random.nextInt(allEventsData.size))
     }
 
     val maybeOrderId = getUUID
 
-    val eventsDataSize = eventsData(maybeOrderId).size
+    val allEventsDataSize = allEventsData(maybeOrderId)
 
-    if (eventsDataSize == 1) {
+    if (allEventsDataSize.size == 1) {
 
-      val orderValidated = OrderValidated(UUID.randomUUID(), maybeOrderId, nowDatePlusRandomMinutes)
+      val lastEvent = allEventsDataSize(0).asInstanceOf[OrderCreated]
+      val orderValidated = OrderValidated(UUID.randomUUID(), maybeOrderId, orderValidatedDate(lastEvent))
       addEvent(maybeOrderId, orderValidated)
       orderValidated
-    } else if (eventsDataSize == 2) {
+    } else if (allEventsDataSize.size == 2) {
 
-      val orderApproved = OrderApproved(UUID.randomUUID(), maybeOrderId, nowDatePlusRandomMinutes)
+      val lastEvent = allEventsDataSize(1).asInstanceOf[OrderValidated]
+      val orderApproved = OrderApproved(UUID.randomUUID(), maybeOrderId, orderApprovedDate(lastEvent))
       addEvent(maybeOrderId, orderApproved)
       orderApproved
-    } else if (eventsDataSize == 3) {
+    } else if (allEventsDataSize.size == 3) {
 
-      val orderShipped = OrderShipped(UUID.randomUUID(), maybeOrderId, nowDatePlusRandomMinutes)
+      val lastEvent = allEventsDataSize(2).asInstanceOf[OrderApproved]
+      val orderShipped = OrderShipped(UUID.randomUUID(), maybeOrderId, orderShippedDate(lastEvent))
       addEvent(maybeOrderId, orderShipped)
       orderShipped
-    } else if (eventsDataSize == 4) {
+    } else if (allEventsDataSize.size == 4) {
 
-      val orderCompleted = OrderCompleted(UUID.randomUUID(), maybeOrderId, nowDatePlusRandomMinutes)
+      val lastEvent = allEventsDataSize(3).asInstanceOf[OrderShipped]
+      val orderCompleted = OrderCompleted(UUID.randomUUID(), maybeOrderId, orderCompletedDate(lastEvent))
       removeOrder(maybeOrderId)
       orderCompleted
     } else {
       val orderId = UUID.randomUUID()
       val customerId = customerIds(Random.nextInt(customerIds.size))
       val category = Random.nextInt(5) match {
-        case 0 => BOOKS.toString
-        case 1 => AUTOMOTIVE.toString
-        case 2 => FASHION.toString
+        case 0 => ACCESSORIES.toString
+        case 1 => PERIPHERALS.toString
+        case 2 => COMPUTERS.toString
         case 3 => SOFTWARE.toString
-        case 4 => SPORTS.toString
+        case 4 => LAPTOPS.toString
       }
       val orderedItems = (1 to Random.nextInt(2) + 1)
-        .map(t => Item(UUID.randomUUID(), s"Some item $t", Random.nextInt(5), Random.nextInt(10000).toDouble, category)).toList
+        .map(t => Item(UUID.randomUUID(), s"Some item $t", 1 + Random.nextInt(5), Random.nextInt(10000).toDouble, category)).toList
 
-      val orderCreated = OrderCreated(UUID.randomUUID(), orderId, customerId, orderedItems, nowDatePlusRandomMinutes)
+      val orderCreated = OrderCreated(UUID.randomUUID(), orderId, customerId, orderedItems, nowDatePlusRandomMillis)
       addEvent(orderId, orderCreated)
       orderCreated
     }
   }
 
-  def nowDatePlusRandomMinutes: Date = {
-    nowDate = nowDate.plusSeconds(Random.nextInt(15))
-    nowDate.toDate
-  }
-
-  def randomLog(): (String, String) = {
-    val logLvl = logLevel
-    val e = logLvl match {
-      case "INFO" => event
-      case _ => null
-    }
-
-    val eventName = eventNameBy(logLvl, e)
-    val message = messageBy(logLvl, e)
-    (s"$date $logLvl $pid --- [$thread] $eventName:$message\n", message)
+  def randomLog: (String, String) = {
+    val e = event
+    val eventName = e.eventName
+    val message = Serialization.write(e)
+    (s"$date INFO $pid --- [$thread] $eventName:$message\n", message)
   }
 
   def main(args: Array[String]): Unit = {
-    val gson = new Gson()
-
-    def isValidJson(json: String): Boolean = try {
-      gson.fromJson(json, classOf[Object])
-      true
-    } catch {
-      case _: JsonSyntaxException => false
-    }
-
     var counter = 0
     val start = System.currentTimeMillis()
-    val fileTxt = new File("src/main/resources/pl/spark/learning//logsexample.txt")
-    val fileJson = new File("src/main/resources/pl/spark/learning//logsexample.json")
+    val fileTxt = new File("src/main/resources/pl/spark/learning/logsexample.txt")
+    val fileJson = new File("src/main/resources/pl/spark/learning/logsexample.json")
     val fwTxt = new FileWriter(fileTxt, true)
     val fwJson = new FileWriter(fileJson, true)
     try {
       while (fileTxt.length() < limitSizeFileInMb * 1000000) {
-        val log = randomLog()
-        fwTxt.write(log._1)
-
-        if (isValidJson(log._2))
-          fwJson.write(log._2 + "\n")
+        val (log, messageJson) = randomLog
+        fwTxt.write(log)
+        fwJson.write(messageJson + "\n")
 
         if (counter % 10000 == 0) {
-          println(1.0 * fileTxt.length() / 1000000 + "\t" + TimeUnit.MILLISECONDS.toSeconds(System.currentTimeMillis() - start))
+          println(1.0 * fileTxt.length() / 1000000 + "\t" + MILLISECONDS.toSeconds(System.currentTimeMillis() - start))
           counter = 0
         }
         counter = counter + 1
@@ -178,9 +166,8 @@ object EventsLogGenerator {
       fwJson.close()
     }
     val end = System.currentTimeMillis()
-    println("Seconds: " + TimeUnit.MILLISECONDS.toSeconds(end - start))
-    println("Minutes: " + TimeUnit.MILLISECONDS.toMinutes(end - start))
-
+    println("Seconds: " + MILLISECONDS.toSeconds(end - start))
+    println("Minutes: " + MILLISECONDS.toMinutes(end - start))
   }
 }
 
@@ -229,29 +216,12 @@ case object COMPLETED extends Status
 
 sealed trait Category
 
-case object BOOKS extends Category
+case object COMPUTERS extends Category
 
-case object AUTOMOTIVE extends Category
+case object LAPTOPS extends Category
 
-case object FASHION extends Category
+case object ACCESSORIES extends Category
+
+case object PERIPHERALS extends Category
 
 case object SOFTWARE extends Category
-
-case object SPORTS extends Category
-
-class UUIDserializer extends Serializer[UUID] {
-
-  private val UUIDClass = classOf[UUID]
-
-  override def deserialize(implicit format: Formats): PartialFunction[(TypeInfo, JValue), UUID] = {
-    case (TypeInfo(UUIDClass, _), json) => json match {
-      case x: JString => {
-        UUID.fromString(x.values)
-      }
-    }
-  }
-
-  override def serialize(implicit format: Formats): PartialFunction[Any, JValue] = {
-    case x: UUID => JString(x.toString)
-  }
-}
