@@ -151,9 +151,9 @@ object EventsLogGenerator {
     val fwJson = new FileWriter(fileJson, true)
     try {
       while (fileTxt.length() < limitSizeFileInMb * 1000000) {
-        val (log, messageJson) = randomLog
-        fwTxt.write(log)
-        fwJson.write(messageJson + "\n")
+        val (logTxt, logJson) = randomLog
+        fwTxt.write(logTxt)
+        fwJson.write(logJson + "\n")
 
         if (counter % 10000 == 0) {
           println(1.0 * fileTxt.length() / 1000000 + "\t" + MILLISECONDS.toSeconds(System.currentTimeMillis() - start))
