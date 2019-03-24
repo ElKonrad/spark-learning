@@ -80,9 +80,9 @@ object EventsLogGenerator {
     val eventsDataKeys = allEventsData.keys.toList
 
     def getUUID: UUID = {
-      if (eventsDataKeys.isEmpty || eventsDataKeys.size < 100)
+      if (eventsDataKeys.isEmpty || eventsDataKeys.size < 50)
         UUID.randomUUID()
-      else if (allEventsData.groupBy(_._2.size).exists(_._2.size > 100))
+      else if (allEventsData.groupBy(_._2.size).exists(_._2.size > 50))
         allEventsData.find(p => (1 to 4).contains(p._2.size)).get._1
       else
         eventsDataKeys(Random.nextInt(allEventsData.size))
@@ -129,13 +129,14 @@ object EventsLogGenerator {
       val orderedItems = (1 to Random.nextInt(2) + 1)
         .map(t => Item(UUID.randomUUID(), s"Some item $t", 1 + Random.nextInt(5), Random.nextInt(10000).toDouble, category)).toList
 
-      val orderCreated = OrderCreated(UUID.randomUUID(), orderId, customerId, orderedItems, nowDatePlusRandomMillis)
+      val orderCreated = OrderCreated(UUID.randomUUID(), orderId, customerId, orderedItems, nowDate.toDate)
       addEvent(orderId, orderCreated)
       orderCreated
     }
   }
 
   def randomLog: (String, String) = {
+    nowDatePlusRandomMillis
     val e = event
     val eventName = e.eventName
     val message = Serialization.write(e)
