@@ -83,8 +83,8 @@ object EventsLogProcessing {
         .groupBy(_.orderId)
         .filter(isCompleted)
         .map(orderTimeInMillis)
-        .sortBy(p => p._2, ascending = false)
         .map(orderTimeToDays)
+        .sortBy(p => p._2, ascending = false)
         .take(ordersToTake)
         .foreach(println)
     }
@@ -96,8 +96,8 @@ object EventsLogProcessing {
         .groupBy(_.orderId)
         .filter(order => isShipped(order) || isCompleted(order))
         .map(orderTimeFromApprovedToShippedInMillis)
-        .sortBy(p => p._2, ascending = false)
         .map(orderTimeToDays)
+        .sortBy(p => p._2, ascending = false)
         .take(ordersToTake)
         .foreach(println)
     }
