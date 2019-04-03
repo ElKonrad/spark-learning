@@ -1,0 +1,9 @@
+spark-submit \
+--class pl.spark.learning.rdd.EventsLogProcessing \
+--master spark://ec2-54-87-105-206.compute-1.amazonaws.com:7077 \
+--properties-file /usr/local/spark/spark-2.4.0-bin-hadoop2.7/conf/spark-submit.conf \
+--deploy-mode cluster \
+--driver-memory 3GB \
+--executor-memory 3GB \
+/home/ec2-user/spark-learning_2.11-0.1.jar \
+true true false false false
