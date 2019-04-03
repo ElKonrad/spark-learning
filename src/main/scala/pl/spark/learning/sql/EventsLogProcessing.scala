@@ -4,52 +4,80 @@ import java.util.Objects.nonNull
 import java.util.concurrent.TimeUnit
 
 import org.apache.spark.sql.expressions.Aggregator
-import org.apache.spark.sql.{Encoder, Encoders}
+import org.apache.spark.sql.{DataFrame, Encoder, Encoders, SparkSession}
 import pl.spark.learning.ResourceHelper
 import pl.spark.learning.conf.MySparkConf
 
+import scala.util.Try
+
 object EventsLogProcessing {
 
+  def init(runOnCluster: Boolean): (SparkSession, DataFrame) = {
+    if (runOnCluster) {
+      val spark = SparkSession.builder().appName("spark-sql-events-log-processing").getOrCreate()
+      val eventsDF = spark.read.json("s3a://spark.example.bucket/logsexample.json")
+      (spark, eventsDF)
+    } else {
+      val spark = MySparkConf.sparkSession("SQL Events log processor")
+      val eventsDF = spark.read.json(ResourceHelper.getResourceFilepath("logsexample.json"))
+      (spark, eventsDF)
+    }
+  }
+
   def main(args: Array[String]): Unit = {
-    val spark = MySparkConf.sparkSession("SQL Events log processor")
+    val runOnCluster = Try(args(0).toBoolean).getOrElse(false)
+    val runFirstUseCase = Try(args(1).toBoolean).getOrElse(false)
+    val runSecondUseCase = Try(args(2).toBoolean).getOrElse(false)
+    val runThirdUseCase = Try(args(3).toBoolean).getOrElse(false)
+    val runFourthUseCase = Try(args(4).toBoolean).getOrElse(false)
+
+    val (spark, eventsDF) = init(runOnCluster)
+
     import org.apache.spark.sql.functions._
     import spark.implicits._
 
-    val eventsDF = spark.read.json(ResourceHelper.getResourceFilepath("logsexample.json"))
-
     val orderData = eventsDF.as[OrderData]
 
-    orderData
-      .groupBy("eventName")
-      .count()
-      .orderBy("count")
-      .show()
+    if(runFirstUseCase) {
+      orderData
+        .groupBy("eventName")
+        .count()
+        .orderBy("count")
+        .show()
+    }
 
-    val orderAgg = OrdersLongestDuration.toColumn.name("ordersLongestDuration")
-    orderData
-      .groupByKey(_.orderId)
-      .agg(orderAgg)
-      .filter(_._2 >= 0)
-      .orderBy(desc("ordersLongestDuration"))
-      .limit(10)
-      .show(false)
+    if (runSecondUseCase) {
+      val orderAgg = OrdersLongestDuration.toColumn.name("ordersLongestDuration")
+      orderData
+        .groupByKey(_.orderId)
+        .agg(orderAgg)
+        .filter(_._2 >= 0)
+        .orderBy(desc("ordersLongestDuration"))
+        .limit(10)
+        .show(false)
 
-    val orderAgg2 = OrdersLongestDurationFromApprovedToShipped.toColumn.name("ordersLongestDurationFromApprovedToShipped")
-    orderData
-      .groupByKey(_.orderId)
-      .agg(orderAgg2)
-      .filter(_._2 >= 0)
-      .orderBy(desc("ordersLongestDurationFromApprovedToShipped"))
-      .limit(10)
-      .show(false)
+    }
 
-    orderData
-      .filter($"customerId".isNotNull)
-      .groupBy("customerId")
-      .count()
-      .orderBy(desc("count"))
-      .limit(10)
-      .show(false)
+    if (runThirdUseCase) {
+      val orderAgg2 = OrdersLongestDurationFromApprovedToShipped.toColumn.name("ordersLongestDurationFromApprovedToShipped")
+      orderData
+        .groupByKey(_.orderId)
+        .agg(orderAgg2)
+        .filter(_._2 >= 0)
+        .orderBy(desc("ordersLongestDurationFromApprovedToShipped"))
+        .limit(10)
+        .show(false)
+    }
+
+    if (runFourthUseCase) {
+      orderData
+        .filter($"customerId".isNotNull)
+        .groupBy("customerId")
+        .count()
+        .orderBy(desc("count"))
+        .limit(10)
+        .show(false)
+    }
 
     spark.stop()
   }

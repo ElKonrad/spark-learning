@@ -4,17 +4,37 @@ import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 
 import net.liftweb.json._
-import org.apache.spark.SparkContext
+import org.apache.spark.rdd.RDD
+import org.apache.spark.{SparkConf, SparkContext}
 import pl.spark.learning.ResourceHelper
 import pl.spark.learning.conf.MySparkConf
 import pl.spark.learning.generators._
 
+import scala.util.Try
+
 object EventsLogProcessing {
+  def init(runOnCluster: Boolean): (SparkContext, RDD[String]) = {
+    if (runOnCluster) {
+      val spark = new SparkContext(new SparkConf().setAppName("spark-rdd-events-log-processing"))
+      val dataSet = spark.textFile("s3a://spark.example.bucket/logsexample.txt")
+      (spark, dataSet)
+    } else {
+      val spark = new SparkContext(MySparkConf.sparkConf("RDD Events log processor"))
+      val dataSet = spark.textFile(ResourceHelper.getResourceFilepath("logsexample.txt"))
+      (spark, dataSet)
+    }
+  }
+
   def main(args: Array[String]) {
 
-    val sc = new SparkContext(MySparkConf.sparkConf("RDD Events log processor"))
+    val runOnCluster = Try(args(0).toBoolean).getOrElse(false)
+    val runFirstUseCase = Try(args(1).toBoolean).getOrElse(false)
+    val runSecondUseCase = Try(args(2).toBoolean).getOrElse(false)
+    val runThirdUseCase = Try(args(3).toBoolean).getOrElse(false)
+    val runFourthUseCase = Try(args(4).toBoolean).getOrElse(false)
 
-    val dataSet = sc.textFile(ResourceHelper.getResourceFilepath("logsexample.txt"))
+    val (spark, dataSet) = init(runOnCluster)
+
     val apacheLogRegex =
       """(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}.\d{3})(\s*)([^ ]*) ([^ ]*) --- \[(.*)\] ([A-Za-z0-9$_]+):(.*)$""".r
 
@@ -114,16 +134,16 @@ object EventsLogProcessing {
         .foreach(println)
     }
 
-    println("groupedOrderEventsCount")
-    groupedOrderEventsCount()
-    println("ordersLongestTimeLastedInDays")
-    ordersLongestTimeLastedInDays(ordersToTake = 10)
-    println("ordersLongestTimeLastedFromApprovedToShippedInDays")
-    ordersLongestTimeLastedFromApprovedToShippedInDays(ordersToTake = 10)
-    println("customersWithMostOrders")
-    customersWithMostOrders(customersToTake = 10)
+    if (runFirstUseCase)
+      groupedOrderEventsCount()
+    if (runSecondUseCase)
+      ordersLongestTimeLastedInDays(ordersToTake = 10)
+    if (runThirdUseCase)
+      ordersLongestTimeLastedFromApprovedToShippedInDays(ordersToTake = 10)
+    if (runFourthUseCase)
+      customersWithMostOrders(customersToTake = 10)
 
-    sc.stop()
+    spark.stop()
   }
 
   private def isCompleted(tuple: (UUID, Iterable[OrderData])): Boolean = {
@@ -136,15 +156,18 @@ object EventsLogProcessing {
 
   private def orderTimeInMillis(order: (UUID, Iterable[OrderData])): (UUID, Long) = {
     val orders = order._2
-    val diff = orders.last.completedDate.get.getTime - orders.head.createdDate.get.getTime
+    val completedOrder = orders.filter(_.completedDate.isDefined).head
+    val createdOrder = orders.filter(_.createdDate.isDefined).head
+
+    val diff = completedOrder.completedDate.get.getTime - createdOrder.createdDate.get.getTime
     (order._1, diff)
   }
 
   private def orderTimeFromApprovedToShippedInMillis(order: (UUID, Iterable[OrderData])): (UUID, Long) = {
     val orders = order._2.toList
-    val approved = orders(3)
-    val shipped = orders(2)
-    val diff = approved.shippedDate.get.getTime - shipped.approvedDate.get.getTime
+    val approved = orders.filter(_.approvedDate.isDefined).head
+    val shipped = orders.filter(_.shippedDate.isDefined).head
+    val diff = shipped.shippedDate.get.getTime - approved.approvedDate.get.getTime
     (order._1, diff)
   }
 
