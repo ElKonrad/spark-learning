@@ -41,45 +41,17 @@ object EventsLogProcessing {
     def extractLog(line: String): Option[OrderData] = {
       apacheLogRegex.findFirstIn(line) match {
         case Some(apacheLogRegex(date, time, _, logLevel, pid, threadName, className, logMessage)) =>
-          implicit val formats = Serialization.formats(NoTypeHints) + new UUIDserializer
           className match {
             case "OrderCreated" =>
-              val orderCreated = Serialization.read[OrderCreated](logMessage)
-              val orderData = OrderData(
-                orderCreated.id, orderCreated.eventName, orderCreated.status, orderCreated.orderId,
-                customerId = Some(orderCreated.customerId),
-                items = Some(orderCreated.items),
-                createdDate = Some(orderCreated.createdDate)
-              )
-              Some(orderData)
+              OrderEventDeserializer.toOrderCreated(logMessage)
             case "OrderValidated" =>
-              val orderValidated = Serialization.read[OrderValidated](logMessage)
-              val orderData = OrderData(
-                orderValidated.id, orderValidated.eventName, orderValidated.status, orderValidated.orderId,
-                validatedDate = Some(orderValidated.validatedDate)
-              )
-              Some(orderData)
+              OrderEventDeserializer.toOrderValidated(logMessage)
             case "OrderApproved" =>
-              val orderApproved = Serialization.read[OrderApproved](logMessage)
-              val orderData = OrderData(
-                orderApproved.id, orderApproved.eventName, orderApproved.status, orderApproved.orderId,
-                approvedDate = Some(orderApproved.approvedDate)
-              )
-              Some(orderData)
+              OrderEventDeserializer.toOrderApproved(logMessage)
             case "OrderShipped" =>
-              val orderShipped = Serialization.read[OrderShipped](logMessage)
-              val orderData = OrderData(
-                orderShipped.id, orderShipped.eventName, orderShipped.status, orderShipped.orderId,
-                shippedDate = Some(orderShipped.shippedDate)
-              )
-              Some(orderData)
+              OrderEventDeserializer.toOrderShipped(logMessage)
             case "OrderCompleted" =>
-              val orderCompleted = Serialization.read[OrderCompleted](logMessage)
-              val orderData = OrderData(
-                orderCompleted.id, orderCompleted.eventName, orderCompleted.status, orderCompleted.orderId,
-                completedDate = Some(orderCompleted.completedDate)
-              )
-              Some(orderData)
+              OrderEventDeserializer.toOrderCompleted(logMessage)
             case _ => None
           }
         case _ => None
@@ -90,9 +62,9 @@ object EventsLogProcessing {
       dataSet.map(extractLog)
         .filter(_.isDefined)
         .map(_.get)
-        .map(o => (o.eventName, 1))
+        .map(order => (order.eventName, 1))
         .reduceByKey((a, b) => a + b)
-        .sortBy(p => p._2, false)
+        .sortBy(eventTypeCount => eventTypeCount._2, ascending = false)
         .foreach(println)
     }
 
@@ -104,7 +76,7 @@ object EventsLogProcessing {
         .filter(isCompleted)
         .map(orderTimeInMillis)
         .map(orderTimeToDays)
-        .sortBy(p => p._2, ascending = false)
+        .sortBy(orderTimeInDays => orderTimeInDays._2, ascending = false)
         .take(ordersToTake)
         .foreach(println)
     }
@@ -117,7 +89,7 @@ object EventsLogProcessing {
         .filter(order => isShipped(order) || isCompleted(order))
         .map(orderTimeFromApprovedToShippedInMillis)
         .map(orderTimeToDays)
-        .sortBy(p => p._2, ascending = false)
+        .sortBy(orderTimeInDays => orderTimeInDays._2, ascending = false)
         .take(ordersToTake)
         .foreach(println)
     }
@@ -127,9 +99,9 @@ object EventsLogProcessing {
         .filter(_.isDefined)
         .map(_.get)
         .flatMap(_.customerId)
-        .map(c => (c, 1))
+        .map(customer => (customer, 1))
         .reduceByKey((a, b) => a + b)
-        .sortBy(_._2, ascending = false)
+        .sortBy(customerCount => customerCount._2, ascending = false)
         .take(customersToTake)
         .foreach(println)
     }

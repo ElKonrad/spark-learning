@@ -4,7 +4,7 @@ import java.util.Objects.nonNull
 import java.util.concurrent.TimeUnit
 
 import org.apache.spark.sql.expressions.Aggregator
-import org.apache.spark.sql.{DataFrame, Encoder, Encoders, SparkSession}
+import org.apache.spark.sql.{DataFrame, Dataset, Encoder, Encoders, SparkSession}
 import pl.spark.learning.ResourceHelper
 import pl.spark.learning.conf.MySparkConf
 
@@ -38,7 +38,7 @@ object EventsLogProcessing {
 
     val orderData = eventsDF.as[OrderData]
 
-    if(runFirstUseCase) {
+    def groupedOrderEventsCount(orderData: Dataset[OrderData]): Unit = {
       orderData
         .groupBy("eventName")
         .count()
@@ -46,30 +46,31 @@ object EventsLogProcessing {
         .show()
     }
 
-    if (runSecondUseCase) {
-      val orderAgg = OrdersLongestDuration.toColumn.name("ordersLongestDuration")
+    def ordersLongestTimeLastedInDays(orderData: Dataset[OrderData]): Unit = {
+      val orderUDAF = OrdersLongestTimeLastedInDays.toColumn.name("ordersLongestTimeLastedInDays")
       orderData
         .groupByKey(_.orderId)
-        .agg(orderAgg)
+        .agg(orderUDAF)
         .filter(_._2 >= 0)
         .orderBy(desc("ordersLongestDuration"))
         .limit(10)
         .show(false)
-
     }
 
-    if (runThirdUseCase) {
-      val orderAgg2 = OrdersLongestDurationFromApprovedToShipped.toColumn.name("ordersLongestDurationFromApprovedToShipped")
+    def ordersLongestTimeLastedFromApprovedToShippedInDays(orderData: Dataset[OrderData]): Unit = {
+      val orderUDAF = OrdersLongestTimeLastedFromApprovedToShippedInDays.toColumn
+        .name("ordersLongestTimeLastedFromApprovedToShippedInDays")
+
       orderData
         .groupByKey(_.orderId)
-        .agg(orderAgg2)
+        .agg(orderUDAF)
         .filter(_._2 >= 0)
         .orderBy(desc("ordersLongestDurationFromApprovedToShipped"))
         .limit(10)
         .show(false)
     }
 
-    if (runFourthUseCase) {
+    def customersWithMostOrders(orderData: Dataset[OrderData]): Unit = {
       orderData
         .filter($"customerId".isNotNull)
         .groupBy("customerId")
@@ -79,15 +80,29 @@ object EventsLogProcessing {
         .show(false)
     }
 
+    if(runFirstUseCase)
+      groupedOrderEventsCount(orderData)
+
+    if (runSecondUseCase)
+      ordersLongestTimeLastedInDays(orderData)
+
+    if (runThirdUseCase)
+      ordersLongestTimeLastedFromApprovedToShippedInDays(orderData)
+
+    if (runFourthUseCase)
+      customersWithMostOrders(orderData)
+
     spark.stop()
   }
 
   case class OrderFromCreatedToCompleted(var id: String, var createdDate: Long, var completedDate: Long)
 
-  object OrdersLongestDuration extends Aggregator[OrderData, OrderFromCreatedToCompleted, Long] {
-    def zero: OrderFromCreatedToCompleted = OrderFromCreatedToCompleted(null, 0L, 0L)
+  object OrdersLongestTimeLastedInDays extends Aggregator[OrderData, OrderFromCreatedToCompleted, Long] {
 
-    def reduce(buffer: OrderFromCreatedToCompleted, orderData: OrderData): OrderFromCreatedToCompleted = {
+    def zero = OrderFromCreatedToCompleted(null, 0L, 0L)
+
+    def reduce(buffer: OrderFromCreatedToCompleted,
+               orderData: OrderData): OrderFromCreatedToCompleted = {
       buffer.id = orderData.orderId
       if (nonNull(orderData.createdDate)) {
         buffer.createdDate = toDate(orderData.createdDate)
@@ -98,17 +113,19 @@ object EventsLogProcessing {
       buffer
     }
 
-    def merge(b1: OrderFromCreatedToCompleted, b2: OrderFromCreatedToCompleted): OrderFromCreatedToCompleted = {
-      if (b2.id != null)
-        b1.id = b2.id
-      if (b2.createdDate != 0L)
-        b1.createdDate = b2.createdDate
-      if (b2.completedDate != 0L)
-        b1.completedDate = b2.completedDate
-      b1
+    def merge(buffer1: OrderFromCreatedToCompleted,
+              buffer2: OrderFromCreatedToCompleted): OrderFromCreatedToCompleted = {
+      if (nonNull(buffer2.id))
+        buffer1.id = buffer2.id
+      if (buffer2.createdDate != 0L)
+        buffer1.createdDate = buffer2.createdDate
+      if (buffer2.completedDate != 0L)
+        buffer1.completedDate = buffer2.completedDate
+      buffer1
     }
 
-    def finish(reduction: OrderFromCreatedToCompleted): Long = TimeUnit.MILLISECONDS.toDays(reduction.completedDate - reduction.createdDate)
+    def finish(reduction: OrderFromCreatedToCompleted): Long =
+      TimeUnit.MILLISECONDS.toDays(reduction.completedDate - reduction.createdDate)
 
     def bufferEncoder: Encoder[OrderFromCreatedToCompleted] = Encoders.product
 
@@ -117,7 +134,7 @@ object EventsLogProcessing {
 
   case class OrderFromApprovedToShipped(var id: String, var approvedDate: Long, var shippedDate: Long)
 
-  object OrdersLongestDurationFromApprovedToShipped extends Aggregator[OrderData, OrderFromApprovedToShipped, Long] {
+  object OrdersLongestTimeLastedFromApprovedToShippedInDays extends Aggregator[OrderData, OrderFromApprovedToShipped, Long] {
     def zero: OrderFromApprovedToShipped = OrderFromApprovedToShipped(null, 0L, 0L)
 
     def reduce(buffer: OrderFromApprovedToShipped, orderData: OrderData): OrderFromApprovedToShipped = {
