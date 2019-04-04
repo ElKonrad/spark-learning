@@ -52,7 +52,7 @@ object EventsLogProcessing {
         .groupByKey(_.orderId)
         .agg(orderUDAF)
         .filter(_._2 >= 0)
-        .orderBy(desc("ordersLongestDuration"))
+        .orderBy(desc("ordersLongestTimeLastedInDays"))
         .limit(10)
         .show(false)
     }
@@ -65,7 +65,7 @@ object EventsLogProcessing {
         .groupByKey(_.orderId)
         .agg(orderUDAF)
         .filter(_._2 >= 0)
-        .orderBy(desc("ordersLongestDurationFromApprovedToShipped"))
+        .orderBy(desc("ordersLongestTimeLastedFromApprovedToShippedInDays"))
         .limit(10)
         .show(false)
     }

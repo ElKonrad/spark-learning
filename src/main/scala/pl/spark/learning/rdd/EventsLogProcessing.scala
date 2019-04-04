@@ -3,7 +3,6 @@ package pl.spark.learning.rdd
 import java.util.concurrent.TimeUnit
 import java.util.{Date, UUID}
 
-import net.liftweb.json._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 import pl.spark.learning.ResourceHelper
